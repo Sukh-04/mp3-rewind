@@ -1,0 +1,9 @@
+ID3     TIT2      Test MP3 Song TPE1      Test Artist TALB      Test Album TYER      2025   This is a simulated MP3 file for testing the file system. It starts with ID3 metadata header that your code should detect as an MP3 file.
+
+The content here simulates MP3 audio data and metadata. This allows testing of:
+- MP3 file format detection via ID3 header
+- File operations like open, read, seek, close
+- Audio file scanning and listing functionality
+- File size and position tracking
+
+This fake MP3 file provides enough content to test seeking to different positions and reading chunks of data, just like a real MP3 file would during audio playback.

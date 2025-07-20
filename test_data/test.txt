@@ -1,0 +1,9 @@
+This is a simple text file for testing non-audio file operations.
+
+It allows testing of:
+- General file operations on non-audio files
+- File existence checking
+- File reading operations
+- Text file handling
+
+The file contains multiple lines and paragraphs to test different reading scenarios and file positioning operations.

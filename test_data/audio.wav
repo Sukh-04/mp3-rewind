@@ -1,0 +1,9 @@
+RIFF@   WAVEfmt      �  data    Another fake WAV file for testing. This one has the proper RIFF header and simulates a second audio file for testing multiple audio file detection and listing functionality.
+
+This file allows testing:
+- Multiple audio file discovery
+- Audio file enumeration and counting
+- File system scanning with multiple audio formats
+- Proper handling of multiple files with the same extension
+
+The content here simulates audio data that would be found in a real WAV file.

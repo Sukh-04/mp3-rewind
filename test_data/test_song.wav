@@ -1,0 +1,10 @@
+RIFF    WAVEfmt                 D  data    This is a fake WAV file for testing the MP3 Rewind file system implementation. It contains the RIFF header that your audio detection code looks for, followed by some dummy data to simulate a real audio file. The file is long enough to test seeking operations and file reading functionality.
+
+This content simulates what would be in a real WAV file, allowing you to test:
+- File opening and closing
+- Reading file headers
+- Audio file format detection
+- File size calculations
+- Seek operations to different positions in the file
+
+The fake WAV file continues with more content to make it substantial enough for thorough testing of your file system wrapper implementation.

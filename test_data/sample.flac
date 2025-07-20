@@ -1,0 +1,9 @@
+fLaCThis is a simulated FLAC (Free Lossless Audio Codec) file for testing purposes. The file begins with the characteristic "fLaC" signature that your audio detection code should recognize.
+
+FLAC files are lossless audio compression format, and this simulation allows testing of:
+- FLAC file format detection via the fLaC header
+- File system operations on different audio file types
+- Audio file scanning across multiple formats
+- File reading and seeking operations
+
+The simulated FLAC content continues here to provide enough data for comprehensive file system testing, including operations that seek to different positions within the file and read various chunk sizes.
