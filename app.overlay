@@ -1,0 +1,88 @@
+/*
+ * Device tree overlay for MP3 Rewind Audio Streaming
+ * STM32L475 Discovery Board - PWM Audio Output
+ * 
+ * Configures PWM output on PA15 (Arduino D9) for buzzer/audio output
+ * 
+ * This file was completed with the help of Zephyr documentation: 
+ * (https://docs.zephyrproject.org/latest/build/dts/howtos.html#set-devicetree-overlays).
+ *
+ * And troubleshooted/modified with the help of Claude Sonnet 4. The Device Tree is a 
+ * significant abstraction for Zephyr that I am still getting used to. 
+ * 
+ */
+
+/ {
+    chosen {
+        zephyr,console = &usart1;
+        zephyr,shell-uart = &usart1;
+    };
+
+    /* Alias for PWM audio output */
+    aliases {
+        pwm-audio = &pwm2;
+        sw0 = &user_button;
+    };
+
+    /* User button configuration */
+    user_button: user_button {
+        compatible = "gpio-keys";
+        user_btn: user_btn {
+            gpios = <&gpioc 13 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+            label = "User Button";
+        };
+    };
+};
+
+/* Configure USART1 for logging (ST-LINK virtual COM port) */
+&usart1 {
+    status = "okay";
+    pinctrl-0 = <&usart1_tx_pb6 &usart1_rx_pb7>;
+    pinctrl-names = "default";
+    current-speed = <115200>;
+};
+
+/* Enable necessary GPIO ports */
+&gpioa {
+    status = "okay";
+};
+
+&gpiob {
+    status = "okay";
+};
+
+&gpioc {
+    status = "okay";
+};
+
+/* Enable PWM2 for audio output */
+&timers2 {
+	status = "okay";
+
+	pwm2: pwm {
+		status = "okay";
+		pinctrl-0 = <&tim2_ch1_pa15>;
+		pinctrl-names = "default";
+	};
+};
+
+/* Configure pinctrl for PWM audio output */
+&pinctrl {
+    /* PWM2 channel 1 on PA15 for audio output (Arduino D9) */
+    tim2_ch1_pa15: tim2_ch1_pa15 {
+        pinmux = <STM32_PINMUX('A', 15, AF1)>;
+        drive-push-pull;
+        slew-rate = "high-speed";
+    };
+};
+
+/* Optional: Configure user LED for status indication */
+&gpiob {
+    user_led: user_led {
+        compatible = "gpio-leds";
+        led2: led_2 {
+            gpios = <&gpiob 14 GPIO_ACTIVE_HIGH>;
+            label = "User LED 2";
+        };
+    };
+};
