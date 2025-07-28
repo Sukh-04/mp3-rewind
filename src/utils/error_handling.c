@@ -13,6 +13,7 @@
  * project:
  * 
  * v.1.0: File system architecture and implementation (including SD card support).
+ * v.2.0: Audio system pipeline and playback (including WAV decoding) --> see audio/.
  * 
  */
 
