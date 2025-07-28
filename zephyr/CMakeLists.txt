@@ -1,4 +1,4 @@
-# MP3 Rewind Media Player - CMakeLists.txt
+# MP3 Rewind Media Player - Audio Streaming CMakeLists.txt
 
 cmake_minimum_required(VERSION 3.20.0)
 
@@ -6,34 +6,27 @@ cmake_minimum_required(VERSION 3.20.0)
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 # Project configuration
-project(mp3_rewind VERSION 1.0.0)
+project(mp3_rewind_audio VERSION 1.0.0)
 
-# Source files - conditionally compile fs.c or sim_fs.c
-# Use -DUSE_SIMULATION=ON to build with simulation file system
-option(USE_SIMULATION "Use simulation file system instead of real hardware" OFF)
-
-if(USE_SIMULATION)
-    message(STATUS "Building with simulation file system")
-    target_sources(app PRIVATE
-        ../src/main.c
-        ../src/storage/sim_fs.c
-        ../src/utils/error_handling.c
-    )
-    target_compile_definitions(app PRIVATE USE_SIMULATION=1)
-else()
-    message(STATUS "Building with real hardware file system")
-    target_sources(app PRIVATE
-        ../src/main.c
-        ../src/storage/fs.c
-        ../src/utils/error_handling.c
-    )
-endif()
+# Source files for audio streaming system
+target_sources(app PRIVATE
+    ../src/main.c
+    ../src/audio/audioplay.c
+    ../src/audio/audio_buffers.c
+    ../src/audio/wav_decoder.c
+    ../src/server/audio_client.c
+    ../src/utils/circular_buffers.c
+    ../src/utils/error_handling.c
+    ../tinywav\ library/tinywav.c
+)
 
 # Include directories for header files
 target_include_directories(app PRIVATE
     ../src/
-    ../src/storage/
+    ../src/audio/
+    ../src/server/
     ../src/utils/
+    ../tinywav\ library/
 )
 
 # Compile definitions
@@ -48,6 +41,7 @@ target_compile_options(app PRIVATE
     -Wall
     -Wextra
     -Wno-unused-parameter
+    -Wno-double-promotion
     -std=c99
 )
 
