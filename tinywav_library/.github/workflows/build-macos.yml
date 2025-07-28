@@ -1,0 +1,40 @@
+name: Sidelobe Build Matrix macos
+on:
+  workflow_call:
+jobs:
+  build:
+    name: ${{matrix.os}}, ${{matrix.cxx}}, ${{matrix.tinywav_options}}, ${{matrix.build_type}}
+    runs-on: ${{matrix.os}}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-13]
+        tinywav_options: [ALLOCA, MALLOC, VLA]
+        cxx:
+          - clang++
+        build_type: [Debug, Release]
+        std: [14]
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
+        lfs: 'true'
+    - name: Setup & Cmake
+      env:
+        CXX: ${{matrix.cxx}}
+      run: |
+        mkdir -p build
+        cd build
+        cmake -DCMAKE_CXX_STANDARD=${{matrix.std}} \
+              -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+              -DTINYWAV_ALLOCATION=${{matrix.tinywav_options}} \
+              ..
+        
+    - name: Build & Run Tests
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
+      working-directory: build
+      run: |
+        cmake --build . --parallel 2
+        ctest -C ${{ matrix.build_type }} -L TinywavTest -j 2
