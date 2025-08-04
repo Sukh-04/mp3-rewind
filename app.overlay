@@ -16,12 +16,14 @@
     chosen {
         zephyr,console = &usart1;
         zephyr,shell-uart = &usart1;
+        zephyr,wifi = &wifi;
     };
 
-    /* Alias for PWM audio output */
+    /* Alias for PWM audio output and WiFi */
     aliases {
         pwm-audio = &pwm2;
         sw0 = &user_button;
+        wifi0 = &wifi;
     };
 
     /* User button configuration */
@@ -66,16 +68,6 @@
 	};
 };
 
-/* Configure pinctrl for PWM audio output */
-&pinctrl {
-    /* PWM2 channel 1 on PA15 for audio output (Arduino D9) */
-    tim2_ch1_pa15: tim2_ch1_pa15 {
-        pinmux = <STM32_PINMUX('A', 15, AF1)>;
-        drive-push-pull;
-        slew-rate = "high-speed";
-    };
-};
-
 /* Optional: Configure user LED for status indication */
 &gpiob {
     user_led: user_led {
@@ -85,4 +77,58 @@
             label = "User LED 2";
         };
     };
+};
+
+/* Enable WiFi module (ISM43362-M3G-L44) on B-L475E-IOT01A */
+&spi3 {
+    status = "okay";
+    pinctrl-0 = <&spi3_sck_pc10 &spi3_miso_pc11 &spi3_mosi_pc12>;
+    pinctrl-names = "default";
+    cs-gpios = <&gpioe 0 GPIO_ACTIVE_LOW>;
+
+    wifi: wifi@0 {
+        compatible = "inventek,eswifi";
+        reg = <0>;
+        spi-max-frequency = <2000000>;
+        resetn-gpios = <&gpioe 8 GPIO_ACTIVE_LOW>;
+        boot0-gpios = <&gpiob 12 GPIO_ACTIVE_LOW>;
+        wakeup-gpios = <&gpiob 13 GPIO_ACTIVE_LOW>;
+        data-gpios = <&gpioe 1 GPIO_ACTIVE_HIGH>;
+        status = "okay";
+    };
+};
+
+/* Enable and configure SPI3 pinctrl for WiFi */
+&pinctrl {
+    /* PWM2 channel 1 on PA15 for audio output (Arduino D9) */
+    tim2_ch1_pa15: tim2_ch1_pa15 {
+        pinmux = <STM32_PINMUX('A', 15, AF1)>;
+        drive-push-pull;
+        slew-rate = "high-speed";
+    };
+
+    /* SPI3 pins for WiFi module */
+    spi3_sck_pc10: spi3_sck_pc10 {
+        pinmux = <STM32_PINMUX('C', 10, AF6)>;
+        bias-pull-down;
+        drive-push-pull;
+        slew-rate = "very-high-speed";
+    };
+
+    spi3_miso_pc11: spi3_miso_pc11 {
+        pinmux = <STM32_PINMUX('C', 11, AF6)>;
+        bias-pull-down;
+    };
+
+    spi3_mosi_pc12: spi3_mosi_pc12 {
+        pinmux = <STM32_PINMUX('C', 12, AF6)>;
+        bias-pull-down;
+        drive-push-pull;
+        slew-rate = "very-high-speed";
+    };
+};
+
+/* Enable necessary GPIO ports for WiFi */
+&gpioe {
+    status = "okay";
 };

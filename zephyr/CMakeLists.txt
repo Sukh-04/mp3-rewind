@@ -14,19 +14,17 @@ target_sources(app PRIVATE
     ../src/audio/audioplay.c
     ../src/audio/audio_buffers.c
     ../src/audio/wav_decoder.c
-    ../src/server/audio_client.c
+    ../src/server_client/audio_client.c
     ../src/utils/circular_buffers.c
     ../src/utils/error_handling.c
-    ../tinywav\ library/tinywav.c
 )
 
 # Include directories for header files
 target_include_directories(app PRIVATE
     ../src/
     ../src/audio/
-    ../src/server/
+    ../src/server_client/
     ../src/utils/
-    ../tinywav\ library/
 )
 
 # Compile definitions
