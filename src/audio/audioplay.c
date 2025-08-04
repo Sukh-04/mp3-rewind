@@ -27,11 +27,11 @@ LOG_MODULE_REGISTER(audioplay, LOG_LEVEL_DBG);
 /* PWM configuration for buzzer - using PWM2 Channel 1 on PA15 (Arduino D9) */
 #define PWM_DEVICE_NODE DT_NODELABEL(pwm2)
 #define PWM_CHANNEL 1
-#define PWM_PERIOD_NS 50000  // 20kHz period (1/20000 * 1e9) - above human hearing range
+#define PWM_PERIOD_NS 250000  // 4kHz period (1/4000 * 1e9) - audible frequency range
 
-/* Audio buffer configuration */
-#define AUDIO_BUFFER_SIZE (4096 * 2)  // 8KB buffer
-#define AUDIO_CHUNK_SIZE 512          // Process in 512-byte chunks
+/* Audio buffer configuration - reduced size to prevent memory issues */
+#define AUDIO_BUFFER_SIZE (2048)     // 2KB buffer (reduced from 8KB)
+#define AUDIO_CHUNK_SIZE 256         // Process in 256-byte chunks
 
 /* Audio playback thread configuration */
 #define AUDIO_THREAD_STACK_SIZE 2048
@@ -194,10 +194,21 @@ int audio_system_write(const uint8_t *data, size_t len)
         return -EINVAL;
     }
 
+    /* Check if buffer is getting too full to prevent memory corruption */
+    size_t current_size = circular_buffer_size_get(&audio_ctx.audio_buffer);
+    size_t available_space = circular_buffer_space_get(&audio_ctx.audio_buffer);
+    size_t total_capacity = current_size + available_space;
+    
+    if (current_size > (total_capacity * 3 / 4)) {
+        LOG_WRN("Audio buffer %zu%% full (%zu/%zu), dropping data to prevent overflow", 
+                (current_size * 100) / total_capacity, current_size, total_capacity);
+        return 0; // Drop the data to prevent crash
+    }
+
     /* Write data to circular buffer with timeout */
     size_t written = circular_buffer_write_timeout(&audio_ctx.audio_buffer, 
                                                    data, len, 
-                                                   K_MSEC(100));
+                                                   K_MSEC(10)); // Reduced timeout
     
     if (written != len) {
         LOG_WRN("Audio buffer full, wrote %zu/%zu bytes", written, len);
@@ -260,8 +271,23 @@ static void audio_playback_thread(void *arg1, void *arg2, void *arg3)
     
     LOG_INF("Audio playback thread started");
     LOG_DBG("Sample interval: %u μs (rate: %u Hz)", sample_interval_us, audio_ctx.config.format.sample_rate);
+    LOG_INF("Thread running flag: %s", audio_ctx.thread_running ? "true" : "false");
     
+    /* Ensure thread doesn't exit immediately */
+    if (!audio_ctx.thread_running) {
+        LOG_ERR("Thread running flag is false at start!");
+        audio_ctx.thread_running = true; // Force it to true
+    }
+    
+    int loop_count = 0;
     while (audio_ctx.thread_running) {
+        loop_count++;
+        
+        /* Debug: Log every 1000 loops to show thread is alive */
+        if (loop_count % 1000 == 0) {
+            LOG_INF("Audio thread loop %d, state: %d", loop_count, audio_ctx.state);
+        }
+        
         if (audio_ctx.state != AUDIO_STATE_PLAYING) {
             /* Not playing, just sleep */
             k_sleep(K_MSEC(10));
@@ -353,10 +379,10 @@ static int pwm_play_sample(uint16_t sample)
 {
     /* Convert 16-bit sample to PWM duty cycle 
      * For buzzer audio, we want more dramatic duty cycle changes
-     * Map 0-65535 sample to 5%-95% duty cycle for maximum buzzer response
+     * Map 0-65535 sample to 10%-90% duty cycle for maximum buzzer response and volume
      */
-    uint32_t min_pulse = PWM_PERIOD_NS / 20;  // 5% duty cycle minimum
-    uint32_t max_pulse = (PWM_PERIOD_NS * 19) / 20;  // 95% duty cycle maximum
+    uint32_t min_pulse = PWM_PERIOD_NS / 10;  // 10% duty cycle minimum
+    uint32_t max_pulse = (PWM_PERIOD_NS * 9) / 10;  // 90% duty cycle maximum
     uint32_t pulse_range = max_pulse - min_pulse;
     
     uint32_t pulse_width = min_pulse + ((sample * pulse_range) / 65535);
