@@ -12,6 +12,8 @@
  * Update v1.1: Ran into some issues with the TinyWAV library, so this version is a custom 
  * implementation that is inspired by the TinyWAV library but is tailored to the specific needs 
  * of this project. I will change to use TinyWAV when HTTP streaming is implemented.
+ * 
+ * http://soundfile.sapp.org/doc/WaveFormat/ 
  */
 
 #ifndef WAV_DECODER_H
@@ -142,6 +144,31 @@ size_t wav_decoder_get_total_samples(struct wav_decoder *decoder);
  * @param decoder Decoder instance to cleanup
  */
 void wav_decoder_cleanup(struct wav_decoder *decoder);
+
+/**
+ * @brief Check if decoder is initialized
+ * 
+ * @param decoder Decoder instance
+ * @return true if initialized, false otherwise
+ */
+bool wav_decoder_is_initialized(struct wav_decoder *decoder);
+
+/**
+ * @brief Process streaming audio chunk
+ * 
+ * This function is designed for HTTP streaming where audio data arrives in chunks.
+ * It handles partial WAV headers and extracts audio samples from streaming data.
+ * 
+ * @param decoder Decoder instance
+ * @param chunk_data Incoming chunk data
+ * @param chunk_size Size of chunk data
+ * @param audio_samples Output pointer to extracted audio samples
+ * @param samples_len Output length of extracted audio samples
+ * @return Number of audio bytes extracted, 0 if header incomplete, negative on error
+ */
+int wav_decoder_read_samples(struct wav_decoder *decoder, 
+                            const uint8_t *chunk_data, size_t chunk_size,
+                            const uint8_t **audio_samples, size_t *samples_len);
 
 #ifdef __cplusplus
 }

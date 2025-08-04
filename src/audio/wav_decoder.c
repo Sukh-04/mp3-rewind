@@ -211,6 +211,25 @@ size_t wav_decoder_get_total_samples(struct wav_decoder *decoder)
     return total_samples;
 }
 
+size_t wav_decoder_get_total_size(struct wav_decoder *decoder)
+{
+    if (!decoder || !decoder->is_initialized) {
+        return 0;
+    }
+
+    return decoder->audio_data_size;
+}
+
+uint32_t wav_decoder_get_duration_ms(struct wav_decoder *decoder)
+{
+    if (!decoder || !decoder->is_initialized) {
+        return 0;
+    }
+
+    size_t total_samples = wav_decoder_get_total_samples(decoder);
+    return (uint32_t)((total_samples * 1000) / decoder->format.sample_rate);
+}
+
 void wav_decoder_cleanup(struct wav_decoder *decoder)
 {
     if (!decoder) {
@@ -219,4 +238,53 @@ void wav_decoder_cleanup(struct wav_decoder *decoder)
 
     memset(decoder, 0, sizeof(struct wav_decoder));
     LOG_DBG("WAV decoder cleaned up");
+}
+
+bool wav_decoder_is_initialized(struct wav_decoder *decoder)
+{
+    return decoder && decoder->is_initialized;
+}
+
+int wav_decoder_read_samples(struct wav_decoder *decoder, 
+                            const uint8_t *chunk_data, size_t chunk_size,
+                            const uint8_t **audio_samples, size_t *samples_len)
+{
+    if (!decoder || !chunk_data || !audio_samples || !samples_len) {
+        return -EINVAL;
+    }
+
+    *audio_samples = NULL;
+    *samples_len = 0;
+
+    /* If decoder not initialized, try to initialize with this chunk */
+    if (!decoder->is_initialized) {
+        /* Try to initialize with current chunk data */
+        if (wav_decoder_init(decoder, chunk_data, chunk_size) != 0) {
+            /* Header not complete yet, need more data */
+            LOG_DBG("WAV header incomplete, need more data");
+            return 0;
+        }
+    }
+
+    /* If we have audio data in this chunk, extract it */
+    if (decoder->is_initialized) {
+        /* Check if this chunk contains audio data */
+        size_t audio_start_in_chunk = 0;
+        
+        /* If this is the first chunk with the header, skip the header part */
+        if (decoder->audio_data_offset < chunk_size) {
+            audio_start_in_chunk = decoder->audio_data_offset;
+        }
+        
+        /* Calculate how much audio data is in this chunk */
+        if (audio_start_in_chunk < chunk_size) {
+            *audio_samples = chunk_data + audio_start_in_chunk;
+            *samples_len = chunk_size - audio_start_in_chunk;
+            
+            LOG_DBG("Extracted %zu audio bytes from chunk", *samples_len);
+            return *samples_len;
+        }
+    }
+
+    return 0;
 }
