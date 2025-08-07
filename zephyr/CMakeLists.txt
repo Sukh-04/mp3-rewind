@@ -11,7 +11,9 @@ project(mp3_rewind_audio VERSION 1.0.0)
 # Source files for audio streaming system
 target_sources(app PRIVATE
     ../src/main.c
-    ../src/audio/audioplay.c
+    ../src/audio/audiosys.c
+    ../src/audio/audioplay_stubs.c
+    ../src/audio/bluetooth.c
     ../src/audio/audio_buffers.c
     ../src/audio/wav_decoder.c
     ../src/server_client/audio_client.c
