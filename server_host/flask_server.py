@@ -290,10 +290,11 @@ def api_tracks():
 
 @app.route('/audio/stream', methods=['GET'])
 def audio_stream():
-    """Stream audio data with embedded client compatibility"""
+    """Stream audio data with packet-based chunked encoding for memory-efficient streaming"""
     try:
         # Get track parameter from query string
         track_name = request.args.get('track')
+        chunk_size = int(request.args.get('chunk_size', 1024))  # Default 1KB chunks
         
         if not track_name:
             # Use current playing track or first available
@@ -307,34 +308,61 @@ def audio_stream():
         if not track_path or not track_path.exists():
             return jsonify({"status": "error", "message": f"Track '{track_name}' not found"}), 404
         
-        print(f"Streaming audio file: {track_path}")
+        print(f"Starting packet-based streaming of: {track_path} (chunk size: {chunk_size} bytes)")
         
-        # Read entire file to avoid chunked encoding issues with embedded clients
-        try:
-            with open(track_path, 'rb') as audio_file:
-                audio_data = audio_file.read()
-                print(f"Read {len(audio_data)} bytes from {track_name}")
-        except Exception as e:
-            print(f"Error reading audio file: {e}")
-            return jsonify({"status": "error", "message": f"Could not read audio file: {str(e)}"}), 500
+        def generate_audio_packets():
+            """Generator function for streaming audio in small packets"""
+            try:
+                with open(track_path, 'rb') as audio_file:
+                    # Read and send WAV header first
+                    wav_header = audio_file.read(44)  # Standard WAV header size
+                    if len(wav_header) >= 44:
+                        yield wav_header
+                        print(f"Sent WAV header ({len(wav_header)} bytes)")
+                    
+                    # Stream audio data in chunks
+                    chunk_count = 0
+                    total_sent = len(wav_header) if len(wav_header) >= 44 else 0
+                    
+                    while True:
+                        chunk = audio_file.read(chunk_size)
+                        if not chunk:
+                            break
+                        
+                        yield chunk
+                        chunk_count += 1
+                        total_sent += len(chunk)
+                        
+                        # Log every 10 chunks to reduce spam
+                        if chunk_count % 10 == 0:
+                            print(f"Sent packet {chunk_count}: {len(chunk)} bytes (total: {total_sent} bytes)")
+                        
+                        # Small delay to prevent overwhelming the embedded client
+                        time.sleep(0.01)  # 10ms between packets
+                    
+                    print(f"Streaming completed: {chunk_count} packets, {total_sent} total bytes")
+                    
+            except Exception as e:
+                print(f"Error during streaming: {e}")
+                yield b''  # Send empty chunk to indicate end
         
-        # Return complete file with embedded-friendly headers
+        # Return streaming response with chunked encoding
         response = Response(
-            audio_data,
+            generate_audio_packets(),
             mimetype='audio/wav',
             headers={
                 'Cache-Control': 'no-cache',
                 'Connection': 'close',
-                'Content-Length': str(len(audio_data)),
-                'Accept-Ranges': 'bytes'
+                'Transfer-Encoding': 'chunked',
+                'X-Chunk-Size': str(chunk_size)
             }
         )
         
-        print(f"Sending {len(audio_data)} bytes of audio data for {track_name}")
+        print(f"Starting chunked streaming response for {track_name}")
         return response
         
     except Exception as e:
-        print(f"Error in audio_stream: {e}")
+        print(f"Error in packet-based audio_stream: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 def main():

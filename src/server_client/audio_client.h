@@ -4,6 +4,14 @@
  * 
  * Defines the interface for the HTTP audio streaming client that
  * connects to Python audio server and receives audio streams.
+ * 
+ * As mentioned earlier this part of the project occured following a
+ * shift in the way I send and receive audio data. Initially, I
+ * wanted to use a SD card module, but after a lot of challenges with
+ * integrating it, I decided to implement a HTTP streaming approach.
+ * 
+ * This version was created with the help of Claude Sonnet 4. Please note
+ * that this version is still being tested and may have some issues.
  */
 
 #ifndef AUDIO_CLIENT_H
