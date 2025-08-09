@@ -48,8 +48,10 @@ static const struct gpio_dt_spec led1 = GPIO_DT_SPEC_GET(LED1_NODE, gpios);
 static const struct gpio_dt_spec button = GPIO_DT_SPEC_GET(SW0_NODE, gpios);
 
 /* Test configuration */
-#define TEST_SERVER_HOST "10.0.0.245"  // Change to your PC's IP
+#define TEST_SERVER_HOST ""  // Change to your PC's IP
 #define TEST_SERVER_PORT 8000
+#define SSID ""  // Change to your WiFi SSID
+#define WIFI_PASSWORD ""  // Change to your WiFi password
 
 /* Simple WAV test data (440Hz sine wave) - ensure 4-byte alignment 
  * This complies with the WAV decoder implementation (for now). 
@@ -132,6 +134,20 @@ int main(void)
         goto error;
     }
     printk("✓ Bluetooth connection test passed\n");
+
+    /* Give user time to enable notifications in BLE app */
+    printk("\n⏰ PAUSE BEFORE TEST 2:\n");
+    printk("   📱 Please enable notifications in your BLE app now!\n");
+    printk("   1. In nRF Connect, find the Audio Data characteristic\n");
+    printk("   2. Tap the notification icon (📬) to enable notifications\n");
+    printk("   3. Wait for this countdown to complete...\n\n");
+    
+    for (int countdown = 15; countdown > 0; countdown--) {
+        printk("⏳ Starting Test 2 in %d seconds... (Enable notifications now!)\n", countdown);
+        k_sleep(K_MSEC(1000));
+    }
+    
+    printk("🚀 Starting Test 2 now...\n");
 
     /* Test 2: Audio Streaming via Bluetooth LE */
     printk("\n--- Test 2: Bluetooth LE Audio Streaming ---\n");
@@ -227,13 +243,16 @@ static int init_wifi_connection(void)
         net_if_up(iface);
         k_sleep(K_MSEC(1000)); // Wait for interface to come up
     }
+
+    char ssid[32] = SSID;
+    char password[64] = WIFI_PASSWORD;
     
     /* WiFi connection parameters - UPDATE THESE WITH YOUR CREDENTIALS */
     struct wifi_connect_req_params wifi_params = {
-        .ssid = "Sikri-1",      // Replace with your actual WiFi network name
-        .ssid_length = strlen("Sikri-1"),
-        .psk = "Jeet-1356",     // Replace with your actual WiFi password  
-        .psk_length = strlen("Jeet-1356"),
+        .ssid = ssid,      // Replace with your actual WiFi network name
+        .ssid_length = strlen(ssid),
+        .psk = "password",     // Replace with your actual WiFi password  
+        .psk_length = strlen("password"),
         .channel = WIFI_CHANNEL_ANY,
         .security = WIFI_SECURITY_TYPE_PSK,
         .band = WIFI_FREQ_BAND_2_4_GHZ,
@@ -303,37 +322,34 @@ static int test_bluetooth_connection(void)
     }
     
     printk("✅ Bluetooth audio system initialized (SPBTLE-RF module)\n");
-    printk("� Now scanning for Bluetooth audio devices...\n");
-    printk("\n🎧 PREPARE YOUR BLUETOOTH HEADPHONES:\n");
-    printk("   1. Turn on your Bose QC Whisper headphones\n");
-    printk("   2. Put them in pairing/discoverable mode\n");
-    printk("   3. Wait for automatic connection...\n");
-    printk("\n⏳ Scanning for audio devices (60 second timeout)...\n");
+    printk("📱 Device is now advertising and discoverable!\n");
+    printk("\n🔵 CONNECT FROM YOUR PHONE OR COMPUTER:\n");
+    printk("   1. Open a BLE scanner app (Nordic nRF Connect, LightBlue, etc.)\n");
+    printk("   2. Look for device named 'MP3-Rewind'\n");
+    printk("   3. Connect to explore GATT services\n");
+    printk("\n⏳ Waiting for incoming connections (60 second test window)...\n");
     
     /* Wait for device connection or timeout */
     int timeout = 60; // seconds
     while (timeout > 0) {
-        /* Check if audio system indicates we're connected */
-        audio_state_t state = audio_system_get_state();
-        if (state == AUDIO_STATE_INITIALIZED) {
-            /* Check if we're actually connected to a device */
-            // We'll need to add a function to check actual Bluetooth connection
-            k_sleep(K_MSEC(2000)); // Give time for connection to establish
-            printk("🎉 Bluetooth audio system ready!\n");
+        /* Check if we have an active Bluetooth connection */
+        if (bluetooth_audio_is_connected()) {
+            printk("🎉 Bluetooth device connected successfully!\n");
+            printk("� GATT Audio Service is active and ready for data\n");
             return 0;
         }
         
-        if (timeout % 10 == 0) {
-            printk("⏳ Still scanning... %d seconds remaining\n", timeout);
-            printk("   💡 Make sure your headphones are in pairing mode\n");
+        if (timeout % 15 == 0) {
+            printk("⏳ Still advertising... %d seconds remaining\n", timeout);
+            printk("   💡 Device 'MP3-Rewind' should be visible in BLE scanner apps\n");
         }
         
         k_sleep(K_MSEC(1000));
         timeout--;
     }
     
-    printk("⚠ Device scan timeout - no audio devices found\n");
-    printk("💡 You can still try connecting manually later\n");
+    printk("⏳ Connection test completed - device remains discoverable\n");
+    printk("💡 You can connect anytime using Nordic nRF Connect or similar apps\n");
     return 0; // Don't fail the test - system is still working
 }
 
