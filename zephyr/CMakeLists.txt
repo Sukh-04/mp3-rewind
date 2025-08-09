@@ -14,6 +14,7 @@ target_sources(app PRIVATE
     ../src/audio/audiosys.c
     ../src/audio/audioplay_stubs.c
     ../src/audio/bluetooth.c
+    ../src/audio/gatt_audio_service.c
     ../src/audio/audio_buffers.c
     ../src/audio/wav_decoder.c
     ../src/server_client/audio_client.c
