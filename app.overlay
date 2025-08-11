@@ -4,6 +4,10 @@
  * 
  * Minimal overlay that enables PWM audio output and relies on board defaults
  * for WiFi (ISM43362) and Bluetooth LE (SPBTLE-RF) modules
+ *
+ * Please note that in the final version of the project, the PWM audio 
+ * output was phased out! This file was created using instances of this 
+ * in other online Zephyr Projects. 
  */
 
 / {

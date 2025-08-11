@@ -9,12 +9,12 @@
  * in the interest of time, I needed a solution that would work to help 
  * move the project forward.
  * 
- * This current implementation handles errors pertaining to v1.0 of the
+ * This current implementation handles errors pertaining to v3.0 of the
  * project:
  * 
  * v.1.0: File system architecture and implementation (including SD card support).
  * v.2.0: Audio system pipeline and playback (including WAV decoding) --> see audio/.
- * 
+ * v.3.0: Bluetooth LE audio streaming via custom GATT service.
  */
 
 #include "error_handling.h"

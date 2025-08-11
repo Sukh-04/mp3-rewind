@@ -13,6 +13,12 @@
  * 
  * The service replaces the previous simulation-only implementation with
  * actual BLE GATT audio transmission.
+ * 
+ * This implementation, especially of the GATT characteristics, is designed
+ * and debugged with the help of Claude Sonnet 4. You will notice I try to 
+ * be as transparent as possible with how the code was developed. In this case
+ * I was trying to bridge the gap created when I realized the SPBTLE-RF module
+ * does not support A2DP profile, so we are using a custom GATT for audio streaming.
  */
 
 #include <zephyr/kernel.h>

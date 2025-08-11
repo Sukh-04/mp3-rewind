@@ -14,6 +14,10 @@
  * - ST SPBTLE-RF module on ST B-L475E-IOT01A Discovery Board
  * - Connected via SPI3 interface with IRQ and RESET control
  * - Supports Bluetooth LE 4.1 with embedded protocol stack
+ * 
+ * Deciphyering and determining the best practices for Bluetooth audio streaming
+ * was a challenge, therefore this implementation was debugged with the help of
+ * Claude Sonnet 4.
  */
 
 #include <zephyr/kernel.h>

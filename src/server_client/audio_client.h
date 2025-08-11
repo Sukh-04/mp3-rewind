@@ -12,6 +12,7 @@
  * 
  * This version was created with the help of Claude Sonnet 4. Please note
  * that this version is still being tested and may have some issues.
+ * 
  */
 
 #ifndef AUDIO_CLIENT_H

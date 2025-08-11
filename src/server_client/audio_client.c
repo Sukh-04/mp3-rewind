@@ -4,10 +4,12 @@
  * 
  * Enhanced implementation that provides continuous HTTP audio streaming
  * with real-time WAV decoding and audio playback. Designed for reliability 
- * and future Bluetooth compatibility.
+ * and future Bluetooth compatibility. 
  * 
  * Please refer to the audio_client.h for more documentation.
  * 
+ * Please note there may be some minor modifications made to this file 
+ * due to the restructuring of the audio system. 
  */
 
 #include "audio_client.h"

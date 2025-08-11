@@ -12,6 +12,9 @@
  * - Audio Info Characteristic: Format information (sample rate, channels, etc.)
  * 
  * Compatible with: ST B-L475E-IOT01A Discovery Board SPBTLE-RF module
+ * 
+ * Some of this information can also be found in the gatt_audio_service.c file.
+ * But have a look for more details!
  */
 
 #ifndef GATT_AUDIO_SERVICE_H

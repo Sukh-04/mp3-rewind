@@ -18,7 +18,11 @@ Example:
 
 The server immplementation was created using a combination of online resources 
 and Claude Sonnet 4. Frankly, this is my first time working with both Flask and
-HTTP servers in Python. This version is v1.0.
+HTTP servers in Python. This version is v2.0.
+
+I shifted to a Packet-based chunked streaming approach to ensure that the server
+can handle audio streaming efficiently, especially for embedded clients like in
+this case.
 """
 
 import os
@@ -35,7 +39,20 @@ from urllib.parse import parse_qs
 from typing import Optional, Dict, Any
 
 class AudioStreamServer:
-    """Manages audio streaming state and control"""
+    """Manages audio streaming state and control.
+
+    Breif documentation of instance attributes:
+
+    - audio_dir: Directory containing audio files
+    - current_track: Currently playing track name
+    - is_playing: Boolean indicating if audio is currently playing
+    - is_paused: Boolean indicating if audio playback is paused
+    - volume: Current playback volume (0-100)
+    - position: Current playback position in bytes
+    - chunk_size: Size of audio chunks for streaming (default 1024 bytes)
+    - lock: Thread lock for synchronizing access to shared state
+    - available_tracks: List of available audio tracks in the audio directory
+    """
     
     def __init__(self, audio_dir: str):
         self.audio_dir = Path(audio_dir)

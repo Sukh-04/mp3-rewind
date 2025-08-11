@@ -4,6 +4,8 @@
  * 
  * Interface for Bluetooth A2DP audio streaming to wireless headphones.
  * This provides the Bluetooth audio output implementation for audiosys.h
+ * 
+ * Please see bluetooth.c for more details on the implementation.
  */
 
 #ifndef BLUETOOTH_H

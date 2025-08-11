@@ -7,8 +7,15 @@
  * 
  * Architecture:
  * PC Python Server → WiFi → Board HTTP Client → Circular Buffer → Bluetooth A2DP → Headphones
- * 
  * Update: Switched from PWM/buzzer testing to real Bluetooth audio output for headphones.
+ * 
+ * NOTE: There are limitatations to the audio output capabilities of the SPBTLE-RF module.
+ * Unfortunately, it does not support A2DP profile, so we are using a custom GATT for audio streaming.
+ * Specifically, we are trying to send audio data to the nRF Connect app on a mobile device.
+ * 
+ * Please Note: that the connection to both headphones and the nRF Connect app was successful, 
+ * however we do not have the capability to stream audio data to the headphones.
+ * 
  */
 
 #include <zephyr/kernel.h>
@@ -251,8 +258,8 @@ static int init_wifi_connection(void)
     struct wifi_connect_req_params wifi_params = {
         .ssid = ssid,      // Replace with your actual WiFi network name
         .ssid_length = strlen(ssid),
-        .psk = "password",     // Replace with your actual WiFi password  
-        .psk_length = strlen("password"),
+        .psk = password,     // Replace with your actual WiFi password  
+        .psk_length = strlen(password),
         .channel = WIFI_CHANNEL_ANY,
         .security = WIFI_SECURITY_TYPE_PSK,
         .band = WIFI_FREQ_BAND_2_4_GHZ,
