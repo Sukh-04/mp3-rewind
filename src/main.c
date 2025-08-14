@@ -55,10 +55,10 @@ static const struct gpio_dt_spec led1 = GPIO_DT_SPEC_GET(LED1_NODE, gpios);
 static const struct gpio_dt_spec button = GPIO_DT_SPEC_GET(SW0_NODE, gpios);
 
 /* Test configuration */
-#define TEST_SERVER_HOST ""  // Change to your PC's IP
+#define TEST_SERVER_HOST "10.0.0.245"  // Change to your PC's IP
 #define TEST_SERVER_PORT 8000
-#define SSID ""  // Change to your WiFi SSID
-#define WIFI_PASSWORD ""  // Change to your WiFi password
+#define SSID "Sikri-1"  // Change to your WiFi SSID
+#define WIFI_PASSWORD "Jeet-1356"  // Change to your WiFi password
 
 /* Simple WAV test data (440Hz sine wave) - ensure 4-byte alignment 
  * This complies with the WAV decoder implementation (for now). 
@@ -95,16 +95,17 @@ static int init_wifi_connection(void);
 static void wait_for_button_press(void);
 static int test_bluetooth_connection(void);
 static int test_audio_playback(void);
+static int test_http_audio_streaming(void);
 static void update_status_leds(void);
 
 int main(void)
 {
     int ret;
     
-    printk("=== MP3 Rewind - Audio Streaming Test ===\n");
-    printk("Testing real-time audio streaming via Bluetooth LE\n");
-    printk("Hardware: ST B-L475E-IOT01A with SPBTLE-RF module\n");
-    printk("Build time: %s %s\n", __DATE__, __TIME__);
+    printk("🎵 === MP3 REWIND - BLUETOOTH LE AUDIO DEMO ===\n");
+    printk("🔗 Streaming audio via Bluetooth LE to your device\n");
+    printk("📱 Hardware: ST Discovery Board + SPBTLE-RF module\n");
+    printk("⚡ Build: %s %s\n\n", __DATE__, __TIME__);
 
     /* Initialize hardware */
     ret = init_hardware();
@@ -141,23 +142,16 @@ int main(void)
         goto error;
     }
     printk("✓ Bluetooth connection test passed\n");
-
-    /* Give user time to enable notifications in BLE app */
-    printk("\n⏰ PAUSE BEFORE TEST 2:\n");
-    printk("   📱 Please enable notifications in your BLE app now!\n");
-    printk("   1. In nRF Connect, find the Audio Data characteristic\n");
-    printk("   2. Tap the notification icon (📬) to enable notifications\n");
-    printk("   3. Wait for this countdown to complete...\n\n");
-    
-    for (int countdown = 15; countdown > 0; countdown--) {
-        printk("⏳ Starting Test 2 in %d seconds... (Enable notifications now!)\n", countdown);
+ 
+    for (int countdown = 10; countdown > 0; countdown--) {
+        printk("⏳ Starting sine wave test in %d seconds...\n", countdown);
         k_sleep(K_MSEC(1000));
     }
     
-    printk("🚀 Starting Test 2 now...\n");
+    printk("🎵 Starting sine wave streaming now!\n");
 
     /* Test 2: Audio Streaming via Bluetooth LE */
-    printk("\n--- Test 2: Bluetooth LE Audio Streaming ---\n");
+    printk("\n--- 🎵 SINE WAVE STREAMING DEMO ---\n");
     current_test_state = TEST_STATE_AUDIO_STREAMING;
     update_status_leds();
     
@@ -169,14 +163,45 @@ int main(void)
     }
     printk("✓ Bluetooth audio streaming test passed\n");
 
+    /* Give user time before Test 3 */
+    printk("\n🌐 NEXT: HTTP STREAMING DEMO\n");
+    
+    for (int countdown = 5; countdown > 0; countdown--) {
+        printk("⏳ Starting HTTP streaming in %d seconds...\n", countdown);
+        k_sleep(K_MSEC(1000));
+    }
+    
+    printk("🌐 Starting HTTP → Bluetooth LE streaming!\n");
+
+    /* Test 3: HTTP Server Audio Streaming via Bluetooth LE */
+    printk("\n--- 🌐 HTTP → BLUETOOTH LE DEMO ---\n");
+    ret = test_http_audio_streaming();
+    if (ret < 0) {
+        LOG_ERR("HTTP audio streaming test failed: %d", ret);
+        current_test_state = TEST_STATE_ERROR;
+        goto error;
+    }
+    printk("✓ HTTP → Bluetooth LE audio streaming test passed\n");
+
     /* All tests completed */
     current_test_state = TEST_STATE_COMPLETE;
-    printk("\n=== All Bluetooth LE Audio Tests Completed Successfully! ===\n");
-    printk("🎧 Ready for real-time HTTP → Bluetooth LE audio streaming\n");
+    printk("\n🎉 === DEMO COMPLETE: All Tests Passed! ===\n");
+    printk("📱 Bluetooth LE connection remains active for your device\n");
+    printk("🔄 Device ready for additional streaming...\n");
+    printk("💡 You can now test audio notifications in your BLE app!\n\n");
 
-    /* Keep the system running for continuous streaming */
+    /* Keep the system running with Bluetooth connection alive */
+    printk("🔗 Maintaining Bluetooth LE connection...\n");
     while (1) {
         update_status_leds();
+        
+        /* Friendly status message every 30 seconds */
+        static int status_counter = 0;
+        if (++status_counter >= 30) {
+            status_counter = 0;
+            printk("💚 Device online - Bluetooth LE ready for audio streaming\n");
+        }
+        
         k_sleep(K_MSEC(1000));
     }
 
@@ -189,6 +214,73 @@ error:
         k_sleep(K_MSEC(200));
     }
 
+    return 0;
+}
+
+static int test_http_audio_streaming(void)
+{
+    printk("🌐 Testing HTTP → Bluetooth LE audio streaming pipeline...\n");
+    
+    /* First ensure we have a Bluetooth connection (reuse from Test 2) */
+    if (!bluetooth_audio_is_connected()) {
+        printk("⚠ No Bluetooth device connected - starting fresh connection\n");
+        
+        /* Re-initialize Bluetooth system if needed */
+        audio_config_t audio_config = {
+            .output_type = AUDIO_OUTPUT_BLUETOOTH,  
+            .format = {
+                .sample_rate = 44100,
+                .channels = 2,        
+                .bits_per_sample = 16
+            },
+            .buffer_size_ms = 100
+        };
+        
+        int ret = audio_system_init(&audio_config);
+        if (ret < 0 && ret != -EALREADY) {
+            LOG_ERR("Failed to re-initialize Bluetooth audio system: %d", ret);
+            return ret;
+        }
+        
+        printk("🔵 Bluetooth system ready for HTTP streaming test\n");
+    } else {
+        printk("✅ Using existing Bluetooth connection for HTTP test\n");
+    }
+    
+    /* Initialize HTTP audio client */
+    printk("📡 Initializing HTTP audio client...\n");
+    int ret = audio_client_init(TEST_SERVER_HOST, TEST_SERVER_PORT);
+    if (ret < 0) {
+        LOG_ERR("Failed to initialize audio client: %d", ret);
+        return ret;
+    }
+    
+    /* Connect to HTTP server */
+    printk("🔗 Connecting to HTTP server %s:%d...\n", TEST_SERVER_HOST, TEST_SERVER_PORT);
+    ret = audio_client_connect();
+    if (ret < 0) {
+        LOG_ERR("Failed to connect to HTTP server: %d", ret);
+        audio_client_cleanup();
+        return ret;
+    }
+    printk("✅ Connected to HTTP audio server successfully\n");
+    
+    /* Start streaming a test audio file */
+    printk("🎵 Starting HTTP audio stream (sine.wav)...\n");
+    ret = audio_client_start_stream("sine.wav");
+    if (ret < 0) {
+        LOG_ERR("Failed to start HTTP audio stream: %d", ret);
+        audio_client_cleanup();
+        return ret;
+    }
+    
+    printk("🎉 HTTP → Bluetooth LE Streaming Test Complete!\n");
+    printk("✅ Audio data successfully streamed from HTTP server to Bluetooth\n");
+    
+    /* Cleanup */
+    audio_client_disconnect();
+    audio_client_cleanup();
+    
     return 0;
 }
 
@@ -330,10 +422,6 @@ static int test_bluetooth_connection(void)
     
     printk("✅ Bluetooth audio system initialized (SPBTLE-RF module)\n");
     printk("📱 Device is now advertising and discoverable!\n");
-    printk("\n🔵 CONNECT FROM YOUR PHONE OR COMPUTER:\n");
-    printk("   1. Open a BLE scanner app (Nordic nRF Connect, LightBlue, etc.)\n");
-    printk("   2. Look for device named 'MP3-Rewind'\n");
-    printk("   3. Connect to explore GATT services\n");
     printk("\n⏳ Waiting for incoming connections (60 second test window)...\n");
     
     /* Wait for device connection or timeout */

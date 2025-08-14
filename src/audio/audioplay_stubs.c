@@ -49,3 +49,9 @@ size_t audioplay_buzzer_get_free_space(void)
     LOG_WRN("PWM/buzzer free space not implemented - using stub");
     return 1024; // Return some reasonable buffer size
 }
+
+int audioplay_buzzer_cleanup(void)
+{
+    LOG_WRN("PWM/buzzer cleanup not implemented - using stub");
+    return 0;
+}

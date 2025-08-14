@@ -33,6 +33,7 @@ import time
 import struct
 import argparse
 import threading
+import logging
 from pathlib import Path
 from flask import Flask, jsonify, request, Response, render_template_string
 from urllib.parse import parse_qs
@@ -311,7 +312,7 @@ def audio_stream():
     try:
         # Get track parameter from query string
         track_name = request.args.get('track')
-        chunk_size = int(request.args.get('chunk_size', 1024))  # Default 1KB chunks
+        chunk_size = int(request.args.get('chunk_size', 256))  # Reduced from 1024 to 256 bytes for embedded clients
         
         if not track_name:
             # Use current playing track or first available
@@ -354,8 +355,8 @@ def audio_stream():
                         if chunk_count % 10 == 0:
                             print(f"Sent packet {chunk_count}: {len(chunk)} bytes (total: {total_sent} bytes)")
                         
-                        # Small delay to prevent overwhelming the embedded client
-                        time.sleep(0.01)  # 10ms between packets
+                        # Increased delay to prevent overwhelming the embedded client
+                        time.sleep(0.05)  # 50ms between packets (was 10ms)
                     
                     print(f"Streaming completed: {chunk_count} packets, {total_sent} total bytes")
                     
@@ -384,6 +385,9 @@ def audio_stream():
 
 def main():
     global audio_server
+    
+    # Suppress Flask development server warning
+    logging.getLogger('werkzeug').setLevel(logging.ERROR)
     
     parser = argparse.ArgumentParser(description='Flask HTTP Audio Streaming Server')
     parser.add_argument('--host', default='127.0.0.1', help='Host to bind to (default: 127.0.0.1)')

@@ -40,7 +40,7 @@
 #include "../utils/circular_buffers.h"
 #include "../utils/error_handling.h"
 
-LOG_MODULE_REGISTER(bluetooth_audio, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(bluetooth_audio, LOG_LEVEL_INF);
 
 /* Bluetooth audio configuration */
 #define BT_AUDIO_BUFFER_SIZE      2048

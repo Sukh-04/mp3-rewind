@@ -32,7 +32,7 @@
 
 #include "gatt_audio_service.h"
 
-LOG_MODULE_REGISTER(gatt_audio_service, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(gatt_audio_service, LOG_LEVEL_INF);
 
 /* Service state */
 static struct {
